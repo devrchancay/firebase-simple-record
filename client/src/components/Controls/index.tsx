@@ -44,6 +44,7 @@ const Controls = ({ addTrack }: ControlProps) => {
         r.recorder.addEventListener('dataavailable', async (e: any) => {
           chunks.push(e.data);
           if (r.recorder.state === 'inactive') {
+            debugger;
             const base64 = await encodeAudio(chunks);
             setCurrentRecord({
               record: base64

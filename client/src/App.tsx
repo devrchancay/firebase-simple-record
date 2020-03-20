@@ -1,9 +1,12 @@
 import React from 'react';
+import fetch from 'unfetch';
+import useSWR from 'swr';
 
 import { Layout } from './components';
 import PlayList from './components/PlayList';
 import Player from './components/Player';
 import { requestAudios, deleteRecord } from './utils/db';
+import { decodeAudio } from './utils/encode';
 
 const initialState = {
   currentTrack: {
@@ -40,13 +43,19 @@ const reducer = (state = initialState, action: any) => {
   }
 };
 
+const fetcher = (url: any) => {
+  return fetch(url).then(r => r.json());
+};
+
 function App() {
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const { data, error } = useSWR('http://localhost:8000/records', fetcher);
 
   const getAudios = async () => {
     dispatch({ type: 'LOADING', payload: true });
     const records = await requestAudios();
-    dispatch({ type: 'CURRENT_TRACK', payload: records[0] });
+
+    // dispatch({ type: 'CURRENT_TRACK', payload: records[0] });
     dispatch({ type: 'LOAD_TRACKS', payload: records });
     dispatch({ type: 'LOADING', payload: false });
   };
@@ -54,6 +63,20 @@ function App() {
   React.useEffect(() => {
     getAudios();
   }, []);
+
+  React.useEffect(() => {
+    if (data) {
+      const r = data[0];
+
+      const byteArray = new Uint8Array(r.record.data)
+      const blob = new Blob([byteArray], { type: 'audio/wav' });
+      console.log(blob)
+      const url = URL.createObjectURL(blob);
+      
+      r.record = url;
+      dispatch({ type: 'CURRENT_TRACK', payload: r });
+    }
+  }, [data]);
 
   const setTrack = (track: any) => {
     dispatch({ type: 'CURRENT_TRACK', payload: track });
@@ -71,6 +94,8 @@ function App() {
       payload: null
     });
   };
+
+  if (!data) return <div>loading...</div>;
 
   return (
     <Layout>

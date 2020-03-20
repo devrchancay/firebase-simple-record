@@ -87,7 +87,9 @@ const Player = ({ id, filename, record, removeTrack }: track) => {
             </>
           )}
         </div>
+        
         <audio
+        controls={true}
           src={record}
           ref={ref}
           onCanPlay={() => {

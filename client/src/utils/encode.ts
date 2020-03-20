@@ -14,6 +14,7 @@ function processFile(blob: any) {
 export async function encodeAudio(chunks: any[]) {
   const blob = new Blob(chunks, { type: 'audio/wav' });
   const base64 = await processFile(blob);
+
   return base64;
 }
 
@@ -23,6 +24,7 @@ export function decodeAudio(base64: string) {
   for (let i = 0; i < byteCharacters.length; i++) {
     byteNumbers[i] = byteCharacters.charCodeAt(i);
   }
+  
   const byteArray = new Uint8Array(byteNumbers);
 
   const blob = new Blob([byteArray], { type: 'audio/wav' });
