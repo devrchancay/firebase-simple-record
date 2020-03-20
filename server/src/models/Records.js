@@ -3,9 +3,13 @@ import mongoose from 'mongoose';
 const RecordSchema = mongoose.Schema({
   filename: String,
   record: {
-    data: Buffer
+    data: Buffer,
+    contentType: String
   },
-  date: Date
+  date: {
+    type: Date,
+    default: Date.now()
+  }
 });
 
 const Record = mongoose.model('Record', RecordSchema);

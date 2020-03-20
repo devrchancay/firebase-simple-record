@@ -2,9 +2,9 @@ import React from 'react';
 
 import Button from '../Button';
 import audio from '../../utils/audio';
-import { encodeAudio, decodeAudio } from '../../utils/encode';
 import { saveAudio } from '../../utils/db';
 import Modal from '../Modal';
+import { decodeAudio } from '../../utils/encode';
 
 interface ControlProps {
   addTrack: (track: any) => void;
@@ -13,25 +13,20 @@ interface ControlProps {
 const Controls = ({ addTrack }: ControlProps) => {
   const [recording, setRecording] = React.useState(false);
   const [media, setMedia] = React.useState();
-  const [currentRecord, setCurrentRecord] = React.useState();
+  const [currentRecord, setCurrentRecord] = React.useState(new FormData());
   const [isOpen, setOpen] = React.useState(false);
 
   const onCancel = () => {
     setOpen(false);
-    setCurrentRecord(null);
+    setCurrentRecord(new FormData());
   };
 
   const saveRecord = async (title: string) => {
-    const record = await saveAudio({
-      record: currentRecord.record,
-      filename: title
-    });
-
-    addTrack({
-      record: decodeAudio(currentRecord.record),
-      filename: title,
-      id: record.id
-    });
+    const form = currentRecord;
+    form.append('filename', title);
+    const response = await saveAudio(form);
+    response.record = decodeAudio(response.record);
+    addTrack(response);
     setOpen(false);
   };
 
@@ -44,11 +39,10 @@ const Controls = ({ addTrack }: ControlProps) => {
         r.recorder.addEventListener('dataavailable', async (e: any) => {
           chunks.push(e.data);
           if (r.recorder.state === 'inactive') {
-            debugger;
-            const base64 = await encodeAudio(chunks);
-            setCurrentRecord({
-              record: base64
-            });
+            const form = new FormData();
+            const blob = new Blob(chunks, { type: 'audio/wav' });
+            form.append('audio', blob, 'nuevo audio');
+            setCurrentRecord(form);
             setOpen(true);
           }
         });

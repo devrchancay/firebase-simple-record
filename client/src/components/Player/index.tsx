@@ -77,19 +77,12 @@ const Player = ({ id, filename, record, removeTrack }: track) => {
                 >
                   Eliminar
                 </button>
-                <a
-                  href={record}
-                  className="py-2 text-white hover:underline mx-2"
-                >
-                  Descargar
-                </a>
               </div>
             </>
           )}
         </div>
-        
+
         <audio
-        controls={true}
           src={record}
           ref={ref}
           onCanPlay={() => {

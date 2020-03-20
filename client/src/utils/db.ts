@@ -1,58 +1,34 @@
-import { db } from '../config/firebase';
-import { decodeAudio } from '../utils/encode';
+import fetch from 'unfetch';
+import env from './env';
 
-export async function requestAudios() {
-  const doc = await db
-    .collection('audios')
-    .orderBy('date', 'desc')
-    .get();
-  let records: any = [];
-  doc.forEach(doc => {
-    const data = doc.data();
-
-    const converterAudio = {
-      id: doc.id,
-      ...data,
-      record: decodeAudio(data.record),
-      date: data.date
-    };
-    records.push(converterAudio);
+export async function saveAudio(formData: any) {
+  const response = await fetch(env.recordsEndPoint, {
+    method: 'POST',
+    body: formData
   });
 
-  return records;
-}
-
-interface saveAudioParams {
-  filename: string;
-  record: any;
-}
-
-export async function saveAudio({ record, filename }: saveAudioParams) {
-  const response = await db.collection('audios').add({
-    record,
-    filename,
-    date: new Date()
-  });
-  return response;
-}
-
-export async function watchRecords() {
-  db.collection('audios').onSnapshot(function(snapshot) {
-    snapshot.docChanges().forEach(function(change) {
-      console.log(change.type, change.doc.id);
-      if (change.type === 'added') {
-        console.log('agregado', change.doc.data());
-      }
-      if (change.type === 'modified') {
-        console.log('modified', change.doc.data());
-      }
-    });
-  });
+  return response.json();
 }
 
 export async function deleteRecord(id: string) {
-  await db
-    .collection('audios')
-    .doc(id)
-    .delete();
+  try {
+    await fetch(`${env.recordsEndPoint}/${id}`, {
+      method: 'DELETE'
+    });
+  } catch (err) {}
+}
+
+export async function updateRecord(id: string, filename: string) {
+  try {
+    const form = new FormData();
+    form.append('filename', filename);
+    console.log(form);
+    await fetch(`${env.recordsEndPoint}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      body: JSON.stringify({ filename })
+    });
+  } catch (err) {}
 }

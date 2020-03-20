@@ -1,12 +1,22 @@
 import React from 'react';
 
 interface AudioProps {
+  id: string;
   filename: string;
   isActive: boolean;
   date: any;
+  updateName: (id: string, filename: string) => void;
 }
 
-const Audio = ({ filename, isActive, date }: AudioProps) => {
+const Audio = ({ id, filename, isActive, date, updateName }: AudioProps) => {
+  const changeNameAction = () => {
+    const value = window.prompt(`Edite el nombre`, filename);
+
+    if (value && value !== filename) {
+      updateName(id, value);
+    }
+  };
+
   return (
     <div
       className={`w-full h-20 border-gray-200 flex cursor-pointer ${
@@ -15,10 +25,16 @@ const Audio = ({ filename, isActive, date }: AudioProps) => {
     >
       <div className="w-5/6">
         <div className="w-full h-full pl-1">
-          <p className="text-white text-lg">{filename}</p>
+          <p className="text-white text-lg flex justify-between ml-2">
+            <span>{filename}</span>
+            <span onClick={changeNameAction} className="underline text-sm ml-8">
+              Cambiar nombre
+            </span>
+          </p>
+
           {date && (
-            <p className="m-0 text-gray-700">
-              {date.toDate().toLocaleString()}{' '}
+            <p className="m-0 text-gray-700 ml-2">
+              {new Date(date).toLocaleString()}{' '}
             </p>
           )}
         </div>
