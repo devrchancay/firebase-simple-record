@@ -1,9 +1,13 @@
 import React from 'react';
+import fetch from 'unfetch';
+import useSWR from 'swr';
 
 import { Layout } from './components';
 import PlayList from './components/PlayList';
 import Player from './components/Player';
-import { requestAudios, deleteRecord } from './utils/db';
+import { deleteRecord, updateRecord } from './utils/db';
+import { decodeAudio } from './utils/encode';
+import env from './utils/env';
 
 const initialState = {
   currentTrack: {
@@ -35,25 +39,47 @@ const reducer = (state = initialState, action: any) => {
       return { ...state, tracks: [action.payload].concat(state.tracks) };
     case 'CURRENT_TRACK':
       return { ...state, currentTrack: action.payload };
+    case 'UPDATE_TRACK':
+      return {
+        ...state,
+        tracks: state.tracks.reduce((prev: any, next: any) => {
+          if (next.id === action.payload.id) {
+            next.filename = action.payload.filename;
+          }
+          prev.push(next);
+          return prev;
+        }, [])
+      };
     default:
       return state;
   }
 };
 
+const fetcher = (url: any) => {
+  return fetch(url).then(r => r.json());
+};
+
 function App() {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-
-  const getAudios = async () => {
-    dispatch({ type: 'LOADING', payload: true });
-    const records = await requestAudios();
-    dispatch({ type: 'CURRENT_TRACK', payload: records[0] });
-    dispatch({ type: 'LOAD_TRACKS', payload: records });
-    dispatch({ type: 'LOADING', payload: false });
-  };
+  const { data, error } = useSWR(env.recordsEndPoint, fetcher);
 
   React.useEffect(() => {
-    getAudios();
-  }, []);
+    dispatch({ type: 'LOADING', payload: true });
+    if (data) {
+      const records = data.map((file: any) => ({
+        ...file,
+        record: decodeAudio(file.record)
+      }));
+
+      dispatch({ type: 'CURRENT_TRACK', payload: records[0] });
+      dispatch({ type: 'LOAD_TRACKS', payload: records });
+      dispatch({ type: 'LOADING', payload: false });
+    }
+
+    if (error) {
+      dispatch({ type: 'LOADING', payload: false });
+    }
+  }, [data, error]);
 
   const setTrack = (track: any) => {
     dispatch({ type: 'CURRENT_TRACK', payload: track });
@@ -61,6 +87,17 @@ function App() {
 
   const addTrack = (track: any) => {
     dispatch({ type: 'ADD_TRACK', payload: track });
+  };
+
+  const updateName = async (id: string, filename: string) => {
+    updateRecord(id, filename);
+    dispatch({
+      type: 'UPDATE_TRACK',
+      payload: {
+        id,
+        filename
+      }
+    });
   };
 
   const removeTrack = (id: string) => {
@@ -71,6 +108,8 @@ function App() {
       payload: null
     });
   };
+
+  if (!data) return <div>loading...</div>;
 
   return (
     <Layout>
@@ -84,6 +123,7 @@ function App() {
             trackActive={state.currentTrack?.id}
             tracks={state.tracks}
             addTrack={addTrack}
+            updateName={updateName}
           />
         </div>
       </div>

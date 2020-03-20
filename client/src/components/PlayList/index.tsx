@@ -13,13 +13,15 @@ interface PaylistProps {
   trackActive: string;
   setTrack: (track: any) => void;
   addTrack: (track: any) => void;
+  updateName: (id: string, filename: string) => void;
 }
 
 const PlayList = ({
   tracks,
   trackActive,
   setTrack,
-  addTrack
+  addTrack,
+  updateName
 }: PaylistProps) => {
   return (
     <div>
@@ -36,24 +38,15 @@ const PlayList = ({
                 key={audio.id}
               >
                 <Audio
+                  id={audio.id}
                   date={audio.date}
                   isActive={audio.id === trackActive}
                   filename={audio.filename}
+                  updateName={updateName}
                 />
               </button>
             );
           })}
-
-        {/* <Audio url={''} filename={'Record 1'} />
-        <Audio url={''} filename={'Record 2'} />
-        <Audio url={''} filename={'Record 3'} />
-        <Audio url={''} filename={'Record 4'} />
-        <Audio url={''} filename={'Record 5'} />
-        <Audio url={''} filename={'Record 6'} />
-        <Audio url={''} filename={'Record 7'} />
-        <Audio url={''} filename={'Record 8'} />
-        <Audio url={''} filename={'Record 9'} />
-        <Audio url={''} filename={'Record 10'} /> */}
       </div>
     </div>
   );
